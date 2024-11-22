@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config retry-count="3" connection-timeout="10000" so-timeout="120000" time-stamp="0" cookie-policy="rfc2109">
+	<var-def name="spiderInfoCode">
+		T20231214141545913
+	</var-def>
+	<var-def name="spiderInfoType">
+		AUTO
+	</var-def>
+	<var-def name="channelCode">
+		ZBGS
+	</var-def>
+	<var-def name="sheetName">
+		EX_ZBXX_TWO
+	</var-def>
+	<var-def name="imageExts">
+		jpg,gif,bmp,jpeg,png
+	</var-def>
+	<var-def name="fileExts">
+		doc,xsl,rar,zip,docx,xls,xlsx,pdf
+	</var-def>
+	<var-def name="attSoTimeout">
+		600000
+	</var-def>
+	<var-def name="attTry">
+		1
+	</var-def>
+	<var-def name="snapStatus">
+		0
+	</var-def>
+		<var-def name="limitFieldName">
+			
+		</var-def>
+		<var-def name="limitDay">
+			
+		</var-def>
+	<var-def name="fieldNames">
+		CATEGORY_ID,SOURCE_URL,TITLE,PUBLISH_DATE,DESCRIPTION,
+	</var-def>
+	<var-def name="firstUrls">
+	    <![CDATA[]]>
+	</var-def>
+	<var-def name="pageCount">
+		<template>${firstUrls.size()+3}</template>
+	</var-def>
+	<while condition="${i.toInt() &lt; pageCount.toInt()}" index="i">
+		<action class="com.joinspider.jobserver.action.SpiderLog2Action">
+	<var-def name="listContent">
+		<case>
+			<if condition="${i.toInt() &lt; firstUrls.size()}">
+			    <empty>
+					<var-def name = "listUrl">
+						<template><template>${firstUrls.get(i.toInt())}</template></template>
+					</var-def>
+				</empty>
+				<http url="${listUrl}"  >
+				<http-header name="Content-Type">
+		<![CDATA[application/x-www-form-urlencoded; charset=UTF-8]]>
+				</http-header>
+				</http>
+			</if>
+			<else>
+				<empty>
+					<var-def name = "listUrl">
+						<template><![CDATA[https://www.cqggzy.com/interface/rest/esinteligentsearch/getFullTextDataNew#${sys.uuid()}#rest]]></template>
+					</var-def>
+				</empty>
+				<http url="${listUrl}"  method="post" >
+				<http-param name="rest">
+		<template>
+			<![CDATA[{"token":"","pn":${i.toInt()*18},"rn":18,"sdt":"","edt":"","wd":"","inc_wd":"","exc_wd":"","fields":"","cnum":"010","sort":"{\"istop\":0,\"ordernum\":0,\"webdate\":0,\"pubinwebdate\":0}","ssort":"","cl":10000,"terminal":"","condition":[{"fieldName":"categorynum","equal":"014005004","notEqual":null,"equalList":null,"notEqualList":["014001018","014002014","014005015"],"isLike":true,"likeType":2}],"time":null,"highlights":"","statistics":null,"unionCondition":null,"accuracy":"","noParticiple":"1","searchRange":null,"noWd":true}]]>
+		</template>
+				</http-param>
+				<http-header name="Content-Type">
+		<![CDATA[application/x-www-form-urlencoded; charset=UTF-8]]>
+				</http-header>
+				</http>
+			</else>
+		</case>
+	</var-def>
+					<var-def name="CATEGORY_IDS">
+     	<template>
+     		<![CDATA[,3,5,]]>
+     	</template>
+					</var-def>
+					<var-def name="SOURCE_URLS">
+ 		<regexp>
+		    <regexp-pattern>
+		    	<![CDATA[sysscore(.+?)categorynum":"(.+?)","infoid":"(.+?)","sysclicktimes(.+?)webdate":"(\d{4})-(\d{2})-(\d{2})(.+?)","projectno]]>
+		    </regexp-pattern>
+		    <regexp-source>
+		        <var name="listContent"/>
+		    </regexp-source>
+		</regexp>	
+					</var-def>
+							<var-def name="size">
+								<template>${SOURCE_URLS.toList().size()}</template>
+							</var-def>
+					<var-def name="TITLES">
+	    <xpath expression="//title">
+	 	    <case>
+	 	      <if condition="${sys.isJson(listContent)}">
+	 	      	<json-to-xml>
+					<var name="listContent"/>
+				</json-to-xml>
+	 	      </if>
+	 	      <else>
+	 	        <html-to-xml namespaces-aware="false">
+					<var name="listContent"/>
+				</html-to-xml>
+	 	      </else>
+	 	    </case>
+		</xpath>
+					</var-def>
+							<script>
+								assert.assertTrue(TITLES.toList().size() == size.toInt());
+							</script>
+					<var-def name="PUBLISH_DATES">
+	    <xpath expression="//infodate">
+	 	    <case>
+	 	      <if condition="${sys.isJson(listContent)}">
+	 	      	<json-to-xml>
+					<var name="listContent"/>
+				</json-to-xml>
+	 	      </if>
+	 	      <else>
+	 	        <html-to-xml namespaces-aware="false">
+					<var name="listContent"/>
+				</html-to-xml>
+	 	      </else>
+	 	    </case>
+		</xpath>
+					</var-def>
+							<script>
+								assert.assertTrue(PUBLISH_DATES.toList().size() == size.toInt());
+							</script>
+			<loop index="j">
+				<list>
+				  	<var name="PUBLISH_DATES"/>
+				</list>
+				<body>
+				    <action class="com.joinspider.jobserver.action.SpiderLogAction">
+				    	<var-def name="ID">
+							<template>${sys.nextId()}</template>
+						</var-def>			
+								<var-def name="detailRule">
+									<![CDATA[{"containEnd":0,"endStr":"","beforeValue":"","containStart":0,"unicodeFlag":0,"afterValue":"","startStr":"","regValue2Result":"","filterTags":"","plainFlag":0,"stripFlag":0,"filterFlag":0,"replaces":[],"startToBorder":0,"regValue2":"","endToBorder":0,"filterAtts":"","sbcFlag":0}]]>
+								</var-def>
+								<var-def name="CATEGORY_ID">
+									<action class="com.joinspider.jobserver.action.DetailAction">
+											<template>${CATEGORY_IDS.get(0)}</template>
+									</action>
+								</var-def>
+								<var-def name="detailRule">
+									<![CDATA[{"containEnd":0,"endStr":"","beforeValue":"","containStart":0,"unicodeFlag":0,"afterValue":"","startStr":"","regValue2Result":"","filterTags":"","plainFlag":0,"stripFlag":0,"filterFlag":0,"replaces":[{"searchFlag":1,"replaceValue":"https://www.cqggzy.com/yunyangweb/xxhz/ice$2/$2/$5$6$7/$3.html","replaceFlag":1,"searchValue":"sysscore(.+?)categorynum\":\"(.+?)\",\"infoid\":\"(.+?)\",\"sysclicktimes(.+?)webdate\":\"(\\d{4})-(\\d{2})-(\\d{2})(.+?)\",\"projectno"},{"searchFlag":1,"replaceValue":"$1/","replaceFlag":1,"searchValue":"(ice.{6})(.+?)/"},{"searchFlag":0,"replaceValue":"/","replaceFlag":1,"searchValue":"/ice"}],"startToBorder":0,"regValue2":"","endToBorder":0,"filterAtts":"","sbcFlag":0}]]>
+								</var-def>
+								<var-def name="SOURCE_URL">
+									<action class="com.joinspider.jobserver.action.DetailAction">
+											<template>${SOURCE_URLS.get(j.toInt())}</template>
+									</action>
+								</var-def>
+								<var-def name="detailRule">
+									<![CDATA[{"containEnd":0,"endStr":"","beforeValue":"","containStart":0,"unicodeFlag":0,"afterValue":"","startStr":"","regValue2Result":"","filterTags":"","plainFlag":1,"stripFlag":1,"filterFlag":0,"replaces":[],"startToBorder":0,"regValue2":"","endToBorder":0,"filterAtts":"","sbcFlag":0}]]>
+								</var-def>
+								<var-def name="TITLE">
+									<action class="com.joinspider.jobserver.action.DetailAction">
+											<template>${TITLES.get(j.toInt())}</template>
+									</action>
+								</var-def>
+								<var-def name="detailRule">
+									<![CDATA[{"containEnd":0,"endStr":"","beforeValue":"","containStart":0,"unicodeFlag":0,"afterValue":"","startStr":"","regValue2Result":"","filterTags":"","plainFlag":1,"stripFlag":1,"filterFlag":0,"replaces":[],"startToBorder":0,"regValue2":"","endToBorder":0,"filterAtts":"","sbcFlag":0}]]>
+								</var-def>
+								<var-def name="PUBLISH_DATE">
+									<action class="com.joinspider.jobserver.action.DetailAction">
+											<template>${PUBLISH_DATES.get(j.toInt())}</template>
+									</action>
+								</var-def>
+								<var-def name="SOURCE_URL">
+									<template>${sys.fullUrl(listUrl,SOURCE_URL)}</template>
+								</var-def>
+							<action class="com.joinspider.jobserver.action.RepeatAction">
+								<![CDATA[[{"repeatFlag":1,"sourceFieldNames":["SOURCE_URL"],"repeatPosType":"LIST","freshFlag":0}]]]>
+							</action>
+							<var-def name="detailUrl">
+							   		<var name="SOURCE_URL"/>
+							</var-def>
+							<var-def name="detailUrl">
+								<template>${sys.fullUrl(listUrl,detailUrl)}</template>
+							</var-def>
+							<var-def name="detailContent">
+								<http url="${detailUrl}"   >
+				<http-header name="Content-Type">
+		<![CDATA[application/x-www-form-urlencoded; charset=UTF-8]]>
+				</http-header>
+								</http>
+							</var-def>
+									<var-def name="detailRule">
+										<![CDATA[{"containEnd":0,"endStr":"","beforeValue":"","containStart":0,"unicodeFlag":0,"afterValue":"","startStr":"","regValue2Result":"","filterTags":"","plainFlag":0,"stripFlag":0,"filterFlag":0,"replaces":[{"searchFlag":0,"replaceValue":"href=\"https://ztb.cqggzy.com/CQTPBidder/jsgcztbmis2/pages/zbfilelingqu_hy/cQZBFileDownAttachAction.action?cmd=download&AttachGuid=","replaceFlag":1,"searchValue":"onclick=\"downloadAttach('"},{"searchFlag":1,"replaceValue":"&FileCode=$2&ClientGuid=","replaceFlag":1,"searchValue":"(',')((?<=',')(.+?)(?=','))(',')"},{"searchFlag":0,"replaceValue":"\">","replaceFlag":1,"searchValue":"')\">"},{"searchFlag":1,"replaceValue":"","replaceFlag":1,"searchValue":"&nbsp;<a(.+?)(?=<\/div>)"}],"startToBorder":0,"regValue2":"","endToBorder":0,"filterAtts":"","sbcFlag":0}]]>
+									</var-def>
+									<var-def name="preContent">
+	    <xpath expression="//div[@id=&quot;mainContent&quot;]">
+	 	    <case>
+	 	      <if condition="${sys.isJson(detailContent)}">
+	 	      	<json-to-xml>
+					<var name="detailContent"/>
+				</json-to-xml>
+	 	      </if>
+	 	      <else>
+	 	        <html-to-xml namespaces-aware="false">
+					<var name="detailContent"/>
+				</html-to-xml>
+	 	      </else>
+	 	    </case>
+		</xpath>
+									</var-def>
+									<var-def name="DESCRIPTION">
+										<action class="com.joinspider.jobserver.action.DetailAction">
+												<var name="preContent"/>
+										</action>
+									</var-def>
+							<action class="com.joinspider.jobserver.action.RepeatAction">
+								<![CDATA[[]]]>
+							</action>
+						<var-def name="changeCode">
+							<action class="com.joinspider.jobserver.action.ChangeAction">
+							  <![CDATA[[]]]>
+							</action>
+						</var-def>
+						<action class="com.joinspider.jobserver.action.FilterAction">
+							<![CDATA[[]]]>
+						</action>
+						<action class="com.joinspider.jobserver.action.AttachmentAction">
+							<![CDATA[[]]]>
+						</action>
+						<action class="com.joinspider.jobserver.action.SaveAction" />				
+					</action>
+				</body>
+			</loop>	
+		</action>
+	</while>
+</config>

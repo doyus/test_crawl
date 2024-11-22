@@ -1,0 +1,9 @@
+__pycache__
+__pycache__/*
+*.pyc
+.vscode
+.idea
+.venv
+test.py
+框架*.py
+测试*.py
